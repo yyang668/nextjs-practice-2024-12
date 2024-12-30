@@ -5,7 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-
+/**
+ * 日付フォーマット（yyyy.mm.dd hh:mm）
+ * @param date 
+ * @returns 
+ */
 export function formatDate(date : Date) {
   const yyyy = date.getFullYear();
   const mm = String(date.getMonth() + 1).padStart(2, '0');

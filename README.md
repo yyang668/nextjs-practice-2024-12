@@ -1,5 +1,11 @@
 # Getting Started
 
+初期化:
+
+```bash
+npm install
+```
+
 開発サーバー起動:
 
 ```bash
@@ -19,11 +25,7 @@ npm run server
 ## Educational Resources
 
 - `Tailwind公式ドキュメント` [https://tailwindcss.com/docs/installation]
-
 - `Tailwindチートシート` [https://nerdcave.com/tailwind-cheat-sheet]
-
 - `ウェブ入門` [https://developer.mozilla.org/ja/docs/Learn/Getting_started_with_the_web]
-
 - `react基礎` [https://basic-react.axlight.com/html/]
-
 - `Learn Next.js` [https://nextjs.org/learn/dashboard-app]
