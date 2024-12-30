@@ -10,6 +10,8 @@ npm install
 
 ```bash
 npm run dev
+# or set port like:
+npx next dev -p 4000
 ```
 
 ブラウザで [http://localhost:3000](http://localhost:3000) を開くと結果が表示されます。
