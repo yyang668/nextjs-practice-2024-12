@@ -1,8 +1,11 @@
 import fs from 'fs';
 import path from 'path';
+import Lock from 'async-lock';
 import { formatDate } from '@/lib/utils';
 import { DbSchema, CommentSchema, DbData } from '@/lib/schemas'
- 
+
+
+const lock = new Lock(); 
 
 // JSON ファイルパス
 const mockDbPath = path.resolve(process.cwd(), 'db', 'db.json');
@@ -63,10 +66,11 @@ export const db = {
   },
 
   // 患者にコメントを追加する
-  addComment: (content: string, patientId: number, accountId: number, accountName: string) => {
-
+ // 患者にコメントを追加する
+addComment: (content: string, patientId: number, accountId: number, accountName: string) => {
+  return lock.acquire('dbDataLock', async () => {
     const newComment = CommentSchema.parse({
-      id:  ++ dbData.maxCommentId,
+      id: ++dbData.maxCommentId,
       content,
       patientId,
       accountId,
@@ -79,12 +83,15 @@ export const db = {
     // JSON に保存
     fs.writeFileSync(mockDbPath, JSON.stringify(dbData, null, 2));
 
-    loadMockData();
+    await loadMockData();
     return newComment;
-  },
+  });
+},
 
   // コメントを更新する
-  updateComment: (commentId: number, newContent: string) => {
+// コメントを更新する
+updateComment: (commentId: number, newContent: string) => {
+  return lock.acquire('dbDataLock', async () => {
     const commentIndex = dbData.comments.findIndex((comment) => comment.id === commentId);
     if (commentIndex === -1) {
       throw new Error(`Comment with ID ${commentId} not found.`);
@@ -97,12 +104,15 @@ export const db = {
     // JSON に保存
     fs.writeFileSync(mockDbPath, JSON.stringify(dbData, null, 2));
 
-    loadMockData();
+    await loadMockData();
     return dbData.comments[commentIndex];
-  },
+  });
+},
 
   // コメントを削除する
-  deleteComment: (commentId: number) => {
+// コメントを削除する
+deleteComment: (commentId: number) => {
+  return lock.acquire('dbDataLock', async () => {
     const commentIndex = dbData.comments.findIndex((comment) => comment.id === commentId);
     if (commentIndex === -1) {
       throw new Error(`Comment with ID ${commentId} not found.`);
@@ -114,7 +124,8 @@ export const db = {
     // JSON に保存
     fs.writeFileSync(mockDbPath, JSON.stringify(dbData, null, 2));
 
-    loadMockData();
+    await loadMockData();
     return deletedComment;
-  },
+  });
+},
 };

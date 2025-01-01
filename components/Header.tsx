@@ -17,7 +17,7 @@ export default function Header() {
     if (!selectedAccount){
       setSelectedAccount(data[0]);
     }
-   }, []);
+   }, [setAccounts,selectedAccount,setSelectedAccount]);
 
   useEffect(() => {
     // コンポーネントがマウントされたときの初期取得

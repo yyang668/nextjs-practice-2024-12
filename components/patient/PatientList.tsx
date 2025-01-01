@@ -8,25 +8,25 @@ const PatientList = (): JSX.Element => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const response = await fetch(`/api/patients/getPatients`, { cache: 'no-store' });
+  const fetchPatients = async () => {
+    try {
+      const response = await fetch(`/api/patients/getPatients`, { cache: 'no-store' });
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch patients: ${response.statusText}`);
-        }
-
-        const data: Patient[] = await response.json();
-        setPatients(data);
-      } catch (err) {
-        console.error(err);
-        setError((err as Error).message);
-      } finally {
-        setIsLoading(false);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch patients: ${response.statusText}`);
       }
-    };
 
+      const data: Patient[] = await response.json();
+      setPatients(data);
+    } catch (err) {
+      console.error(err);
+      setError((err as Error).message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchPatients();
   }, []);
 
