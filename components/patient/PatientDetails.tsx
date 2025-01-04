@@ -1,53 +1,14 @@
-"use client";
-
 import React, { useState, useEffect } from 'react';
 import {Patient, PatientDetailsProps} from '@/lib/schemas'
+import { getPatientByPatientId } from '@/app/actions'
 
-const PatientDetails: React.FC<PatientDetailsProps> = ({ patientId }) => {
-  const [patient, setPatient] = useState<Patient | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchPatient = async () => {
-      try {
-        const url = `/api/patients/getPatient?id=${patientId}`;
-        console.log('Fetching:', url); //  URLを確認する
-        const response = await fetch(url, { cache: 'no-store' });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch patient: ${response.statusText}`);
-        }
-
-        const data: Patient[] = await response.json();
-        console.log('Fetched data:', data); // データを確認する
-
-        if (data.length > 0) {
-          setPatient(data[0]); // 存在すれば、一番目を取得する
-        } else {
-          throw new Error('No patient found');
-        }
-      } catch (err) {
-        console.error(err);
-        setError((err as Error).message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPatient();
-  },  [patientId]);
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  if (!patient) {
-    return <div>患者情報が存在しませんでした.</div>;
+const PatientDetails: React.FC<PatientDetailsProps> = async({ patientId }) => {
+  let patient : Patient;
+  const data: Patient[] = await getPatientByPatientId(Number(patientId));
+  if (data.length > 0) {
+    patient = data[0];
+  } else {
+    throw new Error('No patient found');
   }
 
   return (

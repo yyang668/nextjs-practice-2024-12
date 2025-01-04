@@ -1,11 +1,13 @@
+'use server';
+
 import fs from 'fs';
 import path from 'path';
 import Lock from 'async-lock';
 import { formatDate } from '@/lib/utils';
-import { DbSchema, CommentSchema, DbData } from '@/lib/schemas'
+import { DbSchema, CommentSchema, DbData,Patient } from '@/lib/schemas';
 
 
-const lock = new Lock(); 
+const lock = new Lock();
 
 // JSON ファイルパス
 const mockDbPath = path.resolve(process.cwd(), 'db', 'db.json');
@@ -15,11 +17,11 @@ let dbData: DbData = {
   accounts: [],
   patients: [],
   comments: [],
-  maxCommentId : 0,
+  maxCommentId: 0,
 };
 
 // ロードモックデータ
-function loadMockData() {
+async function loadMockData() {
   try {
     const data = fs.readFileSync(mockDbPath, 'utf-8');
     const parsedData = JSON.parse(data);
@@ -29,9 +31,9 @@ function loadMockData() {
 
     if (dbData.comments.length > 0) {
       for (const comment of dbData.comments) {
-          if (comment.id > dbData.maxCommentId) {
-            dbData.maxCommentId = comment.id;
-          }
+        if (comment.id > dbData.maxCommentId) {
+          dbData.maxCommentId = comment.id;
+        }
       }
     }
 
@@ -43,16 +45,51 @@ function loadMockData() {
 // APP起動時にモックデータをロードする
 loadMockData();
 
-// モックDBの操作
-export const db = {
-  // アカウントを取得する
-  getAccounts: () => dbData.accounts,
+// ロック関連性
+async function withLock<T>(action: () => Promise<T>): Promise<T> {
+  return lock.acquire('dbDataLock', async () => {
+    return action();
+  });
+}
 
-  // 患者リストを取得する
-  getPatients: () => dbData.patients,
+  // モックDBの操作
+const db = {
+  // アカウントを取得する
+  getAccounts: async () => dbData.accounts,
+
+  // // 患者リストを取得する
+  getPatients: async () => {
+    if (!dbData.patients || dbData.patients.length === 0) {
+        return [];
+    }
+    const patients = dbData.patients as Patient[];
+    return patients.sort((a: Patient, b: Patient) => {
+        if (typeof a.updatedAt ==='string' && typeof b.updatedAt ==='string') {
+            return b.updatedAt.localeCompare(a.updatedAt);
+        }
+        return 0;
+    });
+  },
+
+  // コメントを更新する
+  updatePatient: async (patientId: number) => {
+    const patientIndex = dbData.patients.findIndex((patient) => patient.id === patientId);
+    if (patientIndex === -1) {
+      throw new Error(`Comment with ID ${patientId} not found.`);
+    }
+
+    //  時間を更新する
+    dbData.patients[patientIndex].updatedAt =  String( Date.now());
+
+    // JSON に保存
+    await withLock(async () => fs.writeFileSync(mockDbPath, JSON.stringify(dbData, null, 2)));
+
+    await loadMockData();
+    return ;
+  },
 
   // 患者を取得する
-  getPatientsByPatientId: (patientId: number) => {
+  getPatientByPatientId: async (patientId: number) => {
     const patients = dbData.patients.filter((patient) => patient.id === patientId);
     if (patients.length === 0) {
       throw new Error(`Patient with ID ${patientId} not found.`);
@@ -61,14 +98,12 @@ export const db = {
   },
 
   // 患者のコメントを取得する
-  getCommentsByPatientId: (patientId: number) => {
+  getCommentsByPatientId: async (patientId: number) => {
     return dbData.comments.filter((comment) => comment.patientId === patientId);
   },
 
   // 患者にコメントを追加する
- // 患者にコメントを追加する
-addComment: (content: string, patientId: number, accountId: number, accountName: string) => {
-  return lock.acquire('dbDataLock', async () => {
+  addComment: async (content: string, patientId: number, accountId: number, accountName: string) => {
     const newComment = CommentSchema.parse({
       id: ++dbData.maxCommentId,
       content,
@@ -81,17 +116,14 @@ addComment: (content: string, patientId: number, accountId: number, accountName:
     dbData.comments.push(newComment);
 
     // JSON に保存
-    fs.writeFileSync(mockDbPath, JSON.stringify(dbData, null, 2));
+    await withLock(async () => fs.writeFileSync(mockDbPath, JSON.stringify(dbData, null, 2)));
 
     await loadMockData();
     return newComment;
-  });
-},
+  },
 
   // コメントを更新する
-// コメントを更新する
-updateComment: (commentId: number, newContent: string) => {
-  return lock.acquire('dbDataLock', async () => {
+  updateComment: async (commentId: number, newContent: string) => {
     const commentIndex = dbData.comments.findIndex((comment) => comment.id === commentId);
     if (commentIndex === -1) {
       throw new Error(`Comment with ID ${commentId} not found.`);
@@ -102,17 +134,14 @@ updateComment: (commentId: number, newContent: string) => {
     dbData.comments[commentIndex].updatedAt = formatDate(new Date());
 
     // JSON に保存
-    fs.writeFileSync(mockDbPath, JSON.stringify(dbData, null, 2));
+    await withLock(async () => fs.writeFileSync(mockDbPath, JSON.stringify(dbData, null, 2)));
 
     await loadMockData();
     return dbData.comments[commentIndex];
-  });
-},
+  },
 
   // コメントを削除する
-// コメントを削除する
-deleteComment: (commentId: number) => {
-  return lock.acquire('dbDataLock', async () => {
+  deleteComment: async (commentId: number) => {
     const commentIndex = dbData.comments.findIndex((comment) => comment.id === commentId);
     if (commentIndex === -1) {
       throw new Error(`Comment with ID ${commentId} not found.`);
@@ -122,10 +151,13 @@ deleteComment: (commentId: number) => {
     const deletedComment = dbData.comments.splice(commentIndex, 1)[0];
 
     // JSON に保存
-    fs.writeFileSync(mockDbPath, JSON.stringify(dbData, null, 2));
+    await withLock(async() => fs.writeFileSync(mockDbPath, JSON.stringify(dbData, null, 2)));
 
     await loadMockData();
     return deletedComment;
-  });
-},
+  },
 };
+
+export async function getDb() {
+  return db;
+}

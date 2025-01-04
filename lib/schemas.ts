@@ -14,7 +14,8 @@ export const AccountContextTypeSchema = z.object({
 // 患者データのスキーマ
 export const PatientSchema = z.object({
   id: z.number(),
-  name: z.string()
+  name: z.string(),
+  updatedAt: z.string()
 });
 
 // コメントデータのスキーマ
@@ -53,27 +54,16 @@ export const PatientDetailsPropsSchema = z.object({
 // コメントPropsデータのスキーマ
 export const CommentCardPropsSchema = z.object({
   comment: CommentSchema,
-  isEditingFlag: z.boolean(),
-  isProcessing: z.boolean(),
-  refreshComments: z.function().returns(z.promise(z.void())),
-  deleteComment: z.function().args(z.number()).returns(z.promise(z.void())),
-  editComment: z.function().args(z.number(), z.string()).returns(z.promise(z.void())),
 });
 
 // 患者詳細Propsデータのスキーマ
 export const CommentListPropsSchema = z.object({
-  comments: z.array(CommentSchema).nullable(),
-  isEditingFlag: z.boolean(),
-  isProcessing: z.boolean(),
-  refreshComments: z.function().returns(z.promise(z.void())),
-  deleteComment: z.function().args(z.number()).returns(z.promise(z.void())),
-  editComment: z.function().args(z.number(), z.string()).returns(z.promise(z.void())),
+  patientId: z.string(),
 });
 
 // フッターPropsデータのスキーマ
 export const FooterPropsSchema = z.object({
   patientId: z.string(),
-  refreshComments: z.function().returns(z.promise(z.void())),
 });
 
 // 患者データのスキーマ
@@ -100,7 +90,6 @@ export const DbSchema = z.object({
 });
 
 // 型の推論（オプション）
-
 export type AccountContextType = z.infer<typeof AccountContextTypeSchema>;
 export type AccountSelectorProps = z.infer<typeof AccountSelectorPropsSchema>;
 export type PatientDetailsProps = z.infer<typeof PatientDetailsPropsSchema>;

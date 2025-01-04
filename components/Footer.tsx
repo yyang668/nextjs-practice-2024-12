@@ -3,35 +3,27 @@
 import { useState } from 'react';
 import { useAccount } from '@/app/_context/AccountContext';
 import { FooterProps } from '@/lib/schemas';
-
-export default function Footer({ patientId , refreshComments}: FooterProps) {
+import { addComment } from '@/app/actions'
+export default function Footer({ patientId }: FooterProps) {
   const { selectedAccount } = useAccount();
   const [newComment, setNewComment] = useState('');
-
+  
   const handleSubmit = async () => {
+
     if (!newComment.trim()) {
       alert('コメントを入力してください。');
       return;
     }
 
-    try {
-        try {
-          await fetch('/api/comments/addComment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content : newComment , patientId: Number(patientId), ...selectedAccount}),
-          });
-
-          refreshComments();
-        } catch (error) {
-          console.error('Failed to add comment:', error);
-        }
-      setNewComment(''); //入力欄をクリアする
-    } catch (error) {
-      console.error('Failed to submit comment:', error);
+    if (!selectedAccount) {
+      alert('アカウントを選択してください。');
+      return;
     }
-  };
 
+    await addComment(Number(patientId), newComment,   selectedAccount.id,  selectedAccount.name );
+    setNewComment(''); //入力欄をクリアする
+  };
+ 
   return (
     <footer className="fixed bottom-0 left-0 w-full mr-0 pr-0 bg-gray-100 border-t p-4">
       <div className="flex items-center space-x-2">
