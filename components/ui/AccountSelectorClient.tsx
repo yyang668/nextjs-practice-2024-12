@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Account } from "@/lib/schemas";
 import { useAccount } from "@/app/_context/AccountContext";
+import { PersonIcon } from "@radix-ui/react-icons";
 interface AccountSelectorClientProps {
   accounts: Account[];
 }
@@ -12,6 +13,7 @@ export default function AccountSelectorClient({
 }: AccountSelectorClientProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { selectedAccount, setSelectedAccount } = useAccount();
+  const ref = useRef<HTMLDivElement | null>(null);
 
   // デフォルト値を選択
   useEffect(() => {
@@ -20,24 +22,26 @@ export default function AccountSelectorClient({
     }
   }, [selectedAccount, accounts, setSelectedAccount]);
 
+  // アカウント以外のエリアをクリックする時に、ドロップダウンリストを閉じる処理
+  const handleClickOutside = (event: MouseEvent) => {
+    if (ref.current && !ref.current.contains(event.target as Node)) {
+      setIsOpen(false);
+    }
+  };
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button
         className="flex items-center px-4 py-2 bg-white shadow rounded"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <svg
-          fill="#000000"
-          width="32px"
-          height="32px"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            fillRule="evenodd"
-            d="M12 2.5a5.5 5.5 0 00-3.096 10.047 9.005 9.005 0 00-5.9 8.18.75.75 0 001.5.045 7.5 7.5 0 0114.993 0 .75.75 0 101.499-.044 9.005 9.005 0 00-5.9-8.181A5.5 5.5 0 0012 2.5zM8 8a4 4 0 118 0 4 4 0 01-8 0z"
-          />
-        </svg>
+        <PersonIcon className="size-12" />
         <span className="ml-2">
           {selectedAccount?.name || "アカウント未選択"}
         </span>

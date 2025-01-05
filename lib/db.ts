@@ -5,6 +5,7 @@ import path from "path";
 import Lock from "async-lock";
 import { formatDate } from "@/lib/utils";
 import { DbSchema, CommentSchema, DbData, Patient } from "@/lib/schemas";
+import { randomUUID } from "crypto";
 
 const lock = new Lock();
 
@@ -16,7 +17,6 @@ let dbData: DbData = {
   accounts: [],
   patients: [],
   comments: [],
-  maxCommentId: 0,
 };
 
 // ロードモックデータ
@@ -27,14 +27,6 @@ async function loadMockData() {
 
     // Zod でデータを検証
     dbData = DbSchema.parse(parsedData);
-
-    if (dbData.comments.length > 0) {
-      for (const comment of dbData.comments) {
-        if (comment.id > dbData.maxCommentId) {
-          dbData.maxCommentId = comment.id;
-        }
-      }
-    }
   } catch (error) {
     console.error("Failed to load or validate mock data:", error);
   }
@@ -70,12 +62,12 @@ const db = {
   },
 
   // コメントを更新する
-  updatePatient: async (patientId: number) => {
+  updatePatient: async (patientId: string) => {
     const patientIndex = dbData.patients.findIndex(
       (patient) => patient.id === patientId
     );
     if (patientIndex === -1) {
-      throw new Error(`Comment with ID ${patientId} not found.`);
+      throw new Error(`Patient with ID ${patientId} not found.`);
     }
 
     //  時間を更新する
@@ -91,7 +83,7 @@ const db = {
   },
 
   // 患者を取得する
-  getPatientByPatientId: async (patientId: number) => {
+  getPatientByPatientId: async (patientId: string) => {
     const patients = dbData.patients.filter(
       (patient) => patient.id === patientId
     );
@@ -102,19 +94,19 @@ const db = {
   },
 
   // 患者のコメントを取得する
-  getCommentsByPatientId: async (patientId: number) => {
+  getCommentsByPatientId: async (patientId: string) => {
     return dbData.comments.filter((comment) => comment.patientId === patientId);
   },
 
   // 患者にコメントを追加する
   addComment: async (
     content: string,
-    patientId: number,
-    accountId: number,
+    patientId: string,
+    accountId: string,
     accountName: string
   ) => {
     const newComment = CommentSchema.parse({
-      id: ++dbData.maxCommentId,
+      id: randomUUID(),
       content,
       patientId,
       accountId,
@@ -134,7 +126,7 @@ const db = {
   },
 
   // コメントを更新する
-  updateComment: async (commentId: number, newContent: string) => {
+  updateComment: async (commentId: string, newContent: string) => {
     const commentIndex = dbData.comments.findIndex(
       (comment) => comment.id === commentId
     );
@@ -156,7 +148,7 @@ const db = {
   },
 
   // コメントを削除する
-  deleteComment: async (commentId: number) => {
+  deleteComment: async (commentId: string) => {
     const commentIndex = dbData.comments.findIndex(
       (comment) => comment.id === commentId
     );

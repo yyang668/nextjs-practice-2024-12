@@ -4,7 +4,7 @@ import { Patient } from "@/lib/schemas";
 import { getPatients } from "@/app/actions";
 
 const PatientList = async () => {
-  const patients: Patient[] = await getPatients();
+  const patients: Patient[] = (await getPatients()).data;
 
   return (
     <div className="space-y-4">

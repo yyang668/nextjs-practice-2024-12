@@ -4,7 +4,14 @@ import CommentCard from "@/components/comment/CommentCard";
 import { getComments } from "@/app/actions";
 import { Comment } from "@/lib/schemas";
 export default async function CommentList({ patientId }: CommentListProps) {
-  const comments: Comment[] = await getComments(Number(patientId));
+  const result = await getComments(patientId);
+
+  console.log(";;;;;;;;;;;;;;;;" + JSON.stringify(result));
+
+  if (!result.success) {
+    return <p>{result.error}</p>;
+  }
+  const comments: Comment[] = result.data;
 
   return (
     <div className="space-y-4">

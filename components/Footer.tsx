@@ -20,7 +20,7 @@ export default function Footer({ patientId }: FooterProps) {
     }
 
     await addComment(
-      Number(patientId),
+      patientId,
       newComment,
       selectedAccount.id,
       selectedAccount.name

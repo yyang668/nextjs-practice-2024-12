@@ -4,7 +4,7 @@ import { getPatientByPatientId } from "@/app/actions";
 
 const PatientDetails: React.FC<PatientDetailsProps> = async ({ patientId }) => {
   let patient: Patient;
-  const data: Patient[] = await getPatientByPatientId(Number(patientId));
+  const data: Patient[] = (await getPatientByPatientId(patientId)).data;
   if (data.length > 0) {
     patient = data[0];
   }
