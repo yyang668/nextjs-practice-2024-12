@@ -14,7 +14,8 @@ export const AccountContextTypeSchema = z.object({
 // 患者データのスキーマ
 export const PatientSchema = z.object({
   id: z.number(),
-  name: z.string()
+  name: z.string(),
+  updatedAt: z.string()
 });
 
 // コメントデータのスキーマ

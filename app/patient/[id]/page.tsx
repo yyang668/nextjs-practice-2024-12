@@ -52,7 +52,7 @@ export default  function CommentPage({ params }: { params: { id: string } }) {
       await fetch(`/api/comments/editComment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: commentId, content }),
+        body: JSON.stringify({ id: commentId,patientId:patientId ,content }),
       });
       setIsEditing(false);
 
@@ -71,7 +71,7 @@ export default  function CommentPage({ params }: { params: { id: string } }) {
       await fetch(`/api/comments/deleteComment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: commentId }),
+        body: JSON.stringify({ id: commentId ,patientId:patientId}),
       });
       
        await refreshComments(); 
