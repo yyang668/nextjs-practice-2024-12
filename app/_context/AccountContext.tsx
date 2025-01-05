@@ -1,13 +1,12 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import {Account} from '@/lib/schemas'
-
+import React, { createContext, useContext, useState, ReactNode } from "react";
+import { Account } from "@/lib/schemas";
 
 // Context　を定義する
 type AccountContextType = {
   selectedAccount: Account | null;
-  setSelectedAccount: (account: Account| null) => void;
+  setSelectedAccount: (account: Account | null) => void;
 };
 
 // Context　を作成
@@ -28,7 +27,9 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
 export const useAccount = () => {
   const context = useContext(AccountContext);
   if (!context) {
-    throw new Error('「useAccount」は「AccountProvider」の内部で使用されなければなりません。');
+    throw new Error(
+      "「useAccount」は「AccountProvider」の内部で使用されなければなりません。"
+    );
   }
   return context;
 };

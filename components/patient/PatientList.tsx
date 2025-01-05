@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import PatientCard from '@/components/patient/PatientCard';
-import {Patient} from '@/lib/schemas'
-import { getPatients } from '@/app/actions'
+import React, { useState, useEffect } from "react";
+import PatientCard from "@/components/patient/PatientCard";
+import { Patient } from "@/lib/schemas";
+import { getPatients } from "@/app/actions";
 
-const PatientList  = async () => {
+const PatientList = async () => {
   const patients: Patient[] = await getPatients();
 
   return (

@@ -113,7 +113,7 @@
    * Format a file on save.
    * Defaults to true.
    */
-  // "editor.formatOnSave": true,
+  "editor.formatOnSave": true,
   /**
    * Controls whether the editor should automatically format the line after typing.
    * Defaults to false.

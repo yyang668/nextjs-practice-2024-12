@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 // アカウントのスキーマ
 export const AccountSchema = z.object({
   id: z.number(),
@@ -8,14 +8,17 @@ export const AccountSchema = z.object({
 // AccountContextのスキーマ
 export const AccountContextTypeSchema = z.object({
   selectedAccount: AccountSchema.nullable(),
-  setSelectedAccount: z.function().args(AccountSchema.nullable()).returns(z.promise(z.void())),
+  setSelectedAccount: z
+    .function()
+    .args(AccountSchema.nullable())
+    .returns(z.promise(z.void())),
 });
 
 // 患者データのスキーマ
 export const PatientSchema = z.object({
   id: z.number(),
   name: z.string(),
-  updatedAt: z.string()
+  updatedAt: z.string(),
 });
 
 // コメントデータのスキーマ
@@ -29,7 +32,7 @@ export const CommentSchema = z.object({
   accountId: z.number(),
   accountName: z.string(),
 
-  createdAt:z.string(),
+  createdAt: z.string(),
   updatedAt: z.string(),
 });
 
@@ -43,7 +46,7 @@ export const NewCommentSchema = z.object({
 export const AccountSelectorPropsSchema = z.object({
   accounts: z.array(AccountSchema),
   currentAccount: AccountSchema.nullable(),
-  onChange:z.function().args(AccountSchema).returns(z.promise(z.void())),
+  onChange: z.function().args(AccountSchema).returns(z.promise(z.void())),
 });
 
 // フッターPropsデータのスキーマ
@@ -80,13 +83,12 @@ export const DeleteCommentSchema = z.object({
   id: z.number(),
 });
 
-
 // DB 全体のスキーマ
 export const DbSchema = z.object({
   accounts: z.array(AccountSchema),
   patients: z.array(PatientSchema),
   comments: z.array(CommentSchema),
-  maxCommentId:z.number() ,
+  maxCommentId: z.number(),
 });
 
 // 型の推論（オプション）
@@ -104,7 +106,3 @@ export type NewComment = z.infer<typeof NewCommentSchema>;
 export type Account = z.infer<typeof AccountSchema>;
 
 export type DbData = z.infer<typeof DbSchema>;
-
-
-
- 
