@@ -6,8 +6,6 @@ import { Comment } from "@/lib/schemas";
 export default async function CommentList({ patientId }: CommentListProps) {
   const result = await getComments(patientId);
 
-  console.log(";;;;;;;;;;;;;;;;" + JSON.stringify(result));
-
   if (!result.success) {
     return <p>{result.error}</p>;
   }

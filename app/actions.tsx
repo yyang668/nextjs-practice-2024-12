@@ -18,8 +18,6 @@ export async function getAccounts() {
     const dbInstance = await getDb();
     const accounts = dbInstance.getAccounts();
 
-    console.log("accounts ++++++++++++++++" + accounts);
-
     result.success = true;
     result.data = await accounts;
     return result;

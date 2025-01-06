@@ -87,6 +87,8 @@ export const EditCommentSchema = z.object({
   content: z.string(),
 });
 
+
+// addComment のスキーマ
 export const AddCommentSchema = CommentSchema.pick({
   patientId: true,
   content: true,
