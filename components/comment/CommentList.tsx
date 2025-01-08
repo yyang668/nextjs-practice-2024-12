@@ -5,6 +5,7 @@ import { getComments } from "@/app/actions";
 import { Comment } from "@/lib/schemas";
 export default async function CommentList({ patientId }: CommentListProps) {
   const result = await getComments(patientId);
+  // const [currentEditingId, setCurrentEditingId] = useState<string | null>(null);
 
   if (!result.success) {
     return <p>{result.error}</p>;

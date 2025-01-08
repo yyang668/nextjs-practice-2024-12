@@ -5,18 +5,26 @@ import { useAccount } from "@/app/_context/AccountContext";
 import { CommentCardProps } from "@/lib/schemas";
 import { deleteComment, updateComment } from "@/app/actions";
 import { PersonIcon, TrashIcon } from "@radix-ui/react-icons";
+import { useEditingStore } from "@/app/_context/store";
 
 export default function CommentCard({ comment }: CommentCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(comment.content);
   const { selectedAccount } = useAccount();
   const isOwner = selectedAccount?.id === comment.accountId;
+  const { editingId, setEditingId } = useEditingStore();
+
 
   useEffect(() => {
+    // if (isEditing || (window.currentEditingId && window.currentEditingId !== comment.id)) {
     if (isEditing) {
       setIsEditing(false);
     }
-  }, [selectedAccount]);
+    if (isEditing || (editingId && editingId !== comment.id)) {
+      setIsEditing(false);
+    }
+  }, [selectedAccount, editingId]);
+  // }, [selectedAccount, window.currentEditingId]);
 
   //削除のコールバック
   const handleDelete = async (id: string) => {
@@ -31,6 +39,20 @@ export default function CommentCard({ comment }: CommentCardProps) {
     // editComment(id, content)
     //}
     await updateComment(comment.patientId, id, content);
+    setEditingId(null);
+  };
+
+  const handleFocus = () => {
+    setEditingId(comment.id);
+    if (isOwner) {
+      // window.currentEditingId = comment.id;
+      setIsEditing(true);
+    }
+  };
+  const handleBlur = () => {
+    // window.currentEditingId = null; 
+    handleEdit(comment.id, content);
+    setIsEditing(false);
   };
 
   return (
@@ -48,15 +70,12 @@ export default function CommentCard({ comment }: CommentCardProps) {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           className="mt-2 p-2 border rounded w-full"
-          onBlur={() => {
-            handleEdit(comment.id, content);
-            setIsEditing(false);
-          }}
+          onBlur={handleBlur}
         />
       ) : (
         <p
           className="text-gray-700"
-          onClick={() => setIsEditing(isOwner === true)}
+          onClick={handleFocus}
           style={{
             cursor: isOwner ? "pointer" : "default",
           }}
