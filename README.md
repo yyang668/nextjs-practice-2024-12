@@ -31,3 +31,12 @@ npm run server
 - `ウェブ入門` [https://developer.mozilla.org/ja/docs/Learn/Getting_started_with_the_web]
 - `react基礎` [https://basic-react.axlight.com/html/]
 - `Learn Next.js` [https://nextjs.org/learn/dashboard-app]
+
+
+## 備忘yyang
+
+- `ICON` [https://www.svgrepo.com/svg/347810/person]
+- [https://www.svgrepo.com/svg/347698/chevron-left]
+- https://www.svgrepo.com/svg/486249/data-exploration-data-development-workflow-trash
+- https://www.svgrepo.com/svg/510186/send-message
+- https://rakuraku-engineer.com/posts/nextjs-app/
