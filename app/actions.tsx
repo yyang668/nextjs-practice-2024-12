@@ -9,24 +9,40 @@ import {
 import { revalidatePath } from "next/cache";
 
 /**
+ * エラーハンドリングを簡素化するための汎用関数
+ * @param action 実行する非同期関数
+ * @param errorMessage エラー発生時に表示するメッセージ
+ * @returns 成功または失敗の結果オブジェクト
+ */
+async function handleError<T>(
+  action: () => Promise<T>,
+  errorMessage: string
+): Promise<Result> {
+  try {
+    const data = await action();
+    // 成功時も error を明示的に、空で設定
+    return { success: true, data, error: "" };
+  } catch (error) {
+    console.error(errorMessage, error);
+    return {
+      success: false,
+      error: `${errorMessage} しばらくしてから、もう一度お試しください。`,
+    };
+  }
+}
+
+/**
  * アカウント情報を取得するメソッド
  * @returns データベース内のアカウント情報を返します。
  */
 export async function getAccounts() {
-  let result: Result = { success: false, error: "" };
-  try {
-    const dbInstance = await getDb();
-    const accounts = dbInstance.getAccounts();
-
-    result.success = true;
-    result.data = await accounts;
-    return result;
-  } catch (getAccountsError) {
-    console.error("アカウント情報の取得に失敗しました:", getAccountsError);
-    result.error =
-      "アカウント情報の取得に失敗しました。しばらくしてからもう一度お試しください。";
-    return result;
-  }
+  return handleError(
+    async () => {
+      const dbInstance = await getDb();
+      return await dbInstance.getAccounts();
+    },
+    "アカウント情報の取得に失敗しました"
+  );
 }
 
 /**
@@ -34,64 +50,43 @@ export async function getAccounts() {
  * @returns データベース内の患者情報を返します。
  */
 export async function getPatients() {
-  let result: Result = { success: false, error: "" };
-  try {
-    const dbInstance = await getDb();
-    const patients = await dbInstance.getPatients();
-    result.success = true;
-    result.data = await patients;
-    return result;
-  } catch (getPatientsError) {
-    console.error("患者情報の取得に失敗しました:", getPatientsError);
-    result.error =
-      "患者情報の取得に失敗しました。しばらくしてからもう一度お試しください。";
-    return result;
-  }
+  return handleError(
+    async () => {
+      const dbInstance = await getDb();
+      return await dbInstance.getPatients();
+    },
+    "患者情報の取得に失敗しました"
+  );
 }
 
 /**
  * 指定された患者IDに対応する患者情報を取得するメソッド
  * @param patientId 患者のID
- * @returns 対応する患者の情報を返します。
+ * @returns 対応する患者の情報
  */
 export async function getPatientByPatientId(patientId: string) {
-  let result: Result = { success: false, error: "" };
-  try {
-    const dbInstance = await getDb();
-    const patients = await dbInstance.getPatientByPatientId(patientId);
-    result.success = true;
-    result.data = await patients;
-    return result;
-  } catch (getPatientError) {
-    console.error(
-      "指定された患者IDの患者情報の取得に失敗しました:",
-      getPatientError
-    );
-    result.error =
-      "指定された患者IDの患者情報の取得に失敗しました。しばらくしてからもう一度お試しください。";
-    return result;
-  }
+  return handleError(
+    async () => {
+      const dbInstance = await getDb();
+      return await dbInstance.getPatientByPatientId(patientId);
+    },
+    "指定された患者IDの患者情報の取得に失敗しました"
+  );
 }
 
 /**
  * 指定された患者のコメント情報を取得するメソッド
  * @param patientId 患者のID
- * @returns その患者のコメント情報を返します。
+ * @returns その患者のコメント情報
  */
 export async function getComments(patientId: string) {
-  let result: Result = { success: false, error: "", data: [] as Comment[] };
-  try {
-    const dbInstance = await getDb();
-    const comments = dbInstance.getCommentsByPatientId(patientId);
-    result.success = true;
-    result.data = await comments;
-    return result;
-  } catch (getCommentsError) {
-    console.error("患者のコメント情報の取得に失敗しました:", getCommentsError);
-    result.error =
-      "患者のコメント情報の取得に失敗しました。しばらくしてからもう一度お試しください。";
-    return result;
-  }
+  return handleError(
+    async () => {
+      const dbInstance = await getDb();
+      return await dbInstance.getCommentsByPatientId(patientId);
+    },
+    "患者のコメント情報の取得に失敗しました"
+  );
 }
 
 /**
@@ -108,7 +103,6 @@ export async function addComment(
   accountId: string,
   accountName: string
 ) {
-  let result: Result = { success: false, error: "" };
   const validatedFields = AddCommentSchema.safeParse({
     patientId,
     content: commentStr,
@@ -116,44 +110,29 @@ export async function addComment(
     accountName,
   });
   if (!validatedFields.success) {
-    result.error = Object.values(
-      validatedFields.error.flatten().fieldErrors
-    ).join(", ");
-    return result;
+    return {
+      success: false,
+      error: Object.values(validatedFields.error.flatten().fieldErrors).join(
+        ", "
+      ),
+    };
   }
-  try {
-    const dbInstance = await getDb();
-    const comment = dbInstance.addComment(
-      commentStr,
-      patientId,
-      accountId,
-      accountName
-    );
-    try {
-      dbInstance.updatePatient(patientId);
-    } catch (updatePatientError) {
-      console.error("患者情報の更新に失敗しました:", updatePatientError);
-      result.error =
-        "患者情報の更新に失敗しました。しばらくしてからもう一度お試しください。";
-      return result;
-    }
-    try {
+
+  return handleError(
+    async () => {
+      const dbInstance = await getDb();
+      const comment = await dbInstance.addComment(
+        commentStr,
+        patientId,
+        accountId,
+        accountName
+      );
+      await dbInstance.updatePatient(patientId);
       revalidatePath(`/patient/${patientId}`);
-    } catch (revalidatePathError) {
-      console.error("パスの再検証に失敗しました:", revalidatePathError);
-      result.error =
-        "パスの再検証に失敗しました。手動でページを更新して最新のデータを表示してください。";
-      return result;
-    }
-    result.success = true;
-    result.data = comment;
-    return result;
-  } catch (addCommentError) {
-    console.error("コメントの追加に失敗しました:", addCommentError);
-    result.error =
-      "コメントの追加に失敗しました。しばらくしてからもう一度お試しください。";
-    return result;
-  }
+      return comment;
+    },
+    "コメントの追加に失敗しました"
+  );
 }
 
 /**
@@ -168,46 +147,33 @@ export async function updateComment(
   commentId: string,
   newContent: string
 ) {
-  let result: Result = { success: false, error: "" };
   const validatedFields = UpdateCommentSchema.safeParse({
     patientId,
     id: commentId,
     content: newContent,
   });
   if (!validatedFields.success) {
-    result.error = Object.values(
-      validatedFields.error.flatten().fieldErrors
-    ).join(", ");
-    return result;
+    return {
+      success: false,
+      error: Object.values(validatedFields.error.flatten().fieldErrors).join(
+        ", "
+      ),
+    };
   }
-  try {
-    const dbInstance = await getDb();
-    const updatedComment = dbInstance.updateComment(commentId, newContent);
-    try {
-      dbInstance.updatePatient(patientId);
-    } catch (updatePatientError) {
-      console.error("患者情報の更新に失敗しました:", updatePatientError);
-      result.error =
-        "患者情報の更新に失敗しました。しばらくしてからもう一度お試しください。";
-      return result;
-    }
-    try {
+
+  return handleError(
+    async () => {
+      const dbInstance = await getDb();
+      const updatedComment = await dbInstance.updateComment(
+        commentId,
+        newContent
+      );
+      await dbInstance.updatePatient(patientId);
       revalidatePath(`/patient/${patientId}`);
-    } catch (revalidatePathError) {
-      console.error("パスの再検証に失敗しました:", revalidatePathError);
-      result.error =
-        "パスの再検証に失敗しました。手動でページを更新して最新のデータを表示してください。";
-      return result;
-    }
-    result.success = true;
-    result.data = updatedComment;
-    return result;
-  } catch (updateCommentError) {
-    console.error("コメントの更新に失敗しました:", updateCommentError);
-    result.error =
-      "コメントの更新に失敗しました。しばらくしてからもう一度お試しください。";
-    return result;
-  }
+      return updatedComment;
+    },
+    "コメントの更新に失敗しました"
+  );
 }
 
 /**
@@ -221,39 +187,24 @@ export async function deleteComment(pId: string, commentId: string) {
     id: commentId,
     patientId: pId,
   });
-  let result = { success: false, error: "" };
   if (!validatedFields.success) {
-    result.error = Object.values(
-      validatedFields.error.flatten().fieldErrors
-    ).join(", ");
-    return result;
+    return {
+      success: false,
+      error: Object.values(validatedFields.error.flatten().fieldErrors).join(
+        ", "
+      ),
+    };
   }
+
   const { id, patientId } = validatedFields.data;
-  try {
-    const dbInstance = await getDb();
-    await dbInstance.deleteComment(id);
-    try {
-      dbInstance.updatePatient(patientId);
-    } catch (updatePatientError) {
-      console.error("患者情報の更新に失敗しました:", updatePatientError);
-      result.error =
-        "患者情報の更新に失敗しました。しばらくしてからもう一度お試しください。";
-      return result;
-    }
-    try {
+
+  return handleError(
+    async () => {
+      const dbInstance = await getDb();
+      await dbInstance.deleteComment(id);
+      await dbInstance.updatePatient(patientId);
       revalidatePath(`/patient/${patientId}`);
-    } catch (revalidatePathError) {
-      console.error("パスの再検証に失敗しました:", revalidatePathError);
-      result.error =
-        "パスの再検証に失敗しました。手動でページを更新して最新のデータを表示してください。";
-      return result;
-    }
-    result.success = true;
-    return result;
-  } catch (deleteCommentError) {
-    console.error("コメントの削除に失敗しました:", deleteCommentError);
-    result.error =
-      "コメントの削除に失敗しました。しばらくしてからもう一度お試しください。";
-    return result;
-  }
+    },
+    "コメントの削除に失敗しました"
+  );
 }

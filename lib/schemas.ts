@@ -22,9 +22,9 @@ export const PatientSchema = z.object({
 });
 
 export const ResultSchema = z.object({
-  success: z.boolean(), // 使用正确的函数调用形式定义布尔类型验证规则
-  error: z.string(), // 修正为正确的zod语法，定义字符串类型验证规则
-  data: z.optional(z.any()), // 更严谨地定义data属性为可选属性，使用z.optional包裹，这里先简单使用z.any()表示可以是任意类型，你可以根据实际需求细化类型
+  success: z.boolean(),
+  error: z.string(),
+  data: z.optional(z.any()),
 });
 
 // コメントデータのスキーマ
