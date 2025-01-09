@@ -16,7 +16,7 @@ export default function CommentCard({ comment }: CommentCardProps) {
 
 
   useEffect(() => {
-    // if (isEditing || (window.currentEditingId && window.currentEditingId !== comment.id)) {
+    // if (isEditing || (window.currentEditingId && window.currentEditingId !== comment.id)) { // 備忘：window.currentEditingId で解決できなかた
     if (isEditing) {
       setIsEditing(false);
     }
